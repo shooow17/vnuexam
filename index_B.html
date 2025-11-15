@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 創新應用 互動測驗 (B 卷)</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* ... 您的 CSS 樣式 ... (與 A 卷相同) ... */
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div id="messageModal">
+        </div>
+
+    <div class="container mx-auto max-w-3xl p-4 md:p-8">
+        
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">AI 創新應用</h1>
+            <p class="text-xl text-indigo-600">期中考試 互動練習試題 (B 卷)</p>
+        </header>
+
+        <div id="studentSelection">
+             </div>
+
+        <form id="quizForm">
+            <div class="mt-12">
+                <button type="submit" id="submitBtn" class="submit-btn" disabled>
+                    讀取中，請稍候...
+                </button>
+            </div>
+        </form>
+
+        <div id="score" class="mt-8 mb-20" style="display:none;">
+            總分: <span id="scoreValue">0 / 99</span>
+        </div>
+    </div>
+
+    <script>
+        // *** 1. 新增 ***：貼上您 Apps Script 部署的 "網頁應用程式 URL"
+        // (A 卷和 B 卷使用 "同一個" URL)
+        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/在此貼上您新的URL/exec";
+
+        // --- DOM 元素, 計時器, 訊息框, 填充選單, 提示 (均與 A 卷相同) ---
+        // ... (省略) ...
+        const studentSelector = document.getElementById('studentSelector');
+        const quizForm = document.getElementById('quizForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const messageModal = document.getElementById('messageModal');
+        const modalMessageText = document.getElementById('modalMessageText');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        const scoreDiv = document.getElementById('score');
+        const scoreValue = document.getElementById('scoreValue');
+        let startTime = null;
+        function showMessage(message) { /*...*/ }
+        modalCloseBtn.addEventListener('click', () => { /*...*/ });
+        function populateStudentDropdown(studentList) { /*...*/ }
+        document.querySelectorAll('.hint-btn').forEach(button => { /*...*/ });
+
+
+        // --- 提交表單 (*** B 卷的修改點 ***) ---
+        quizForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            // ... (檢查學生, 保持不變) ...
+            const selectedStudentId = studentSelector.value;
+            if (!selectedStudentId) { /*...*/ return; }
+            const selectedStudentName = studentSelector.options[studentSelector.selectedIndex].text.split(' ').slice(1).join(' '); 
+
+            // *** 2. 修改：請更新 B 卷的答案、配分和總分 ***
+            const correctAnswers = {
+                // ... (請輸入 B 卷的答案) ...
+            };
+            const pointValues = {
+                // ... (請輸入 B 卷的配分) ...
+            };
+            const totalPossibleScore = 99; // (請修改 B 卷的總分)
+            
+            // ... (批改邏輯, 保持不變) ...
+            let score = 0;
+            const formData = new FormData(this);
+            const userAnswers = {};
+            for (let [key, value] of formData.entries()) { userAnswers[key] = value; }
+            for (const keyName in correctAnswers) {
+                 // ... (同 A 卷的批改迴圈) ...
+            }
+
+            // ... (顯示總分, 保持不變) ...
+            scoreValue.textContent = `${score} / ${totalPossibleScore}`;
+            scoreDiv.style.display = 'block';
+            scoreDiv.scrollIntoView({ behavior: 'smooth' });
+
+            // ... (儲存紀錄, 計算時長, 保持不變) ...
+            submitBtn.disabled = true;
+            submitBtn.textContent = '儲存中...';
+            let durationInSeconds = 0;
+            if (startTime) { /*...*/ }
+            
+            const record = {
+                studentId: selectedStudentId,
+                studentName: selectedStudentName,
+                score: score,
+                totalPossibleScore: totalPossibleScore,
+                duration: durationInSeconds,
+                answers: userAnswers
+            };
+            
+            // *** 3. 關鍵修改：指定 B 卷的 action ***
+            const payload = {
+              action: "saveRecordB", // <-- 指定 B 卷的 action
+              data: record
+            };
+
+            // (fetch 邏輯與 A 卷相同)
+            fetch(GAS_WEB_APP_URL, {
+              method: 'POST',
+              body: JSON.stringify(payload),
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            })
+            .then(res => res.json()) 
+            .then(response => {
+              if (response.status === 'success') {
+                onRecordSaved(response.data); 
+              } else {
+                throw new Error(response.message); 
+              }
+            })
+            .catch(err => onRecordSaveFailed(err)); 
+        });
+        
+        // --- 回呼函數 (與 A 卷相同) ---
+        function onRecordSaved(responseMessage) { /*...*/ }
+        function onRecordSaveFailed(error) { /*...*/ }
+
+        // --- D 應用程式啟動 (與 A 卷相同) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // ... (啟用按鈕, 監聽學生選單) ...
+            submitBtn.disabled = false;
+            submitBtn.textContent = '送出答案';
+            studentSelector.addEventListener('change', () => { /*...*/ });
+            
+            // (fetch 學生名單邏輯, 與 A 卷相同)
+            const payload = { action: "getStudents" };
+            fetch(GAS_WEB_APP_URL, {
+              method: 'POST',
+              body: JSON.stringify(payload),
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            })
+            .then(res => res.json())
+            .then(response => {
+              if (response.status === 'success') {
+                populateStudentDropdown(response.data); 
+              } else {
+                throw new Error(response.message); 
+              }
+            })
+            .catch(err => {
+                console.error('載入學生名單失敗:', err);
+                studentSelector.innerHTML = '<option value="">-- 載入學生名單失敗 --</option>';
+            });
+        });
+
+    </script>
+</body>
+</html>
