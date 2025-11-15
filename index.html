@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 創新應用 互動測驗 (GitHub 版)</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* ... 您的 CSS 樣式 ... (保持不變) ... */
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            background-color: #f4f7f6;
+        }
+        .question-container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.3s ease;
+        }
+        .question-container:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        }
+        .question-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+        }
+        .option-label {
+            display: block;
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        .option-label:hover {
+            background-color: #f0f4ff;
+            border-color: #b8cfff;
+        }
+        .option-label input {
+            margin-right: 12px;
+            accent-color: #4f46e5;
+        }
+        .hint-btn {
+            background-color: #e0e7ff;
+            color: #4f46e5;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: background-color 0.2s ease;
+        }
+        .hint-btn:hover {
+            background-color: #c7d2fe;
+        }
+        .hint-text {
+            background-color: #fffbeb;
+            border: 1px solid #fde68a;
+            color: #b45309;
+            border-radius: 6px;
+            padding: 10px 14px;
+            margin-top: 12px;
+            font-size: 0.95rem;
+        }
+        .submit-btn {
+            background-color: #4f46e5;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+        .submit-btn:hover {
+            background-color: #4338ca;
+        }
+        .submit-btn:disabled {
+            background-color: #a5b4fc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 8px;
+            font-weight: 600;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        .result.correct {
+            color: #057a55;
+            background-color: #f0fdf4;
+        }
+        .result.incorrect {
+            color: #b91c1c;
+            background-color: #fef2f2;
+        }
+        .correct-answer-text {
+            color: #166534;
+            font-weight: 600;
+        }
+        .incorrect-answer-text {
+            color: #991b1b;
+            text-decoration: line-through;
+        }
+        #score {
+            position: sticky;
+            bottom: 0;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            border-top: 1px solid #eee;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        
+        /* 訊息提示框 */
+        #messageModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        #messageModal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            text-align: center;
+        }
+        .modal-btn {
+            background-color: #4f46e5;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        /* 學生選單 */
+        #studentSelection {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        #studentSelector {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div id="messageModal">
+        <div class="modal-content">
+            <p id="modalMessageText"></p>
+            <button id="modalCloseBtn" class="modal-btn">關閉</button>
+        </div>
+    </div>
+
+    <div class="container mx-auto max-w-3xl p-4 md:p-8">
+        
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">AI 創新應用</h1>
+            <p class="text-xl text-indigo-600">期中考試 互動練習試題 (A 卷)</p>
+        </header>
+
+        <div id="studentSelection">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-4 border-b-2 border-indigo-500 pb-2">
+                第一步：請選擇您的姓名
+            </h2>
+            <select id="studentSelector">
+                <option value="">-- 正在從後端載入學生名單... --</option>
+                </select>
+        </div>
+
+        <form id="quizForm">
+
+            <h2 class="text-2xl font-semibold text-gray-900 mb-4 mt-12 border-b-2 border-indigo-500 pb-2">
+                第二部分: 開始作答 (6題) <span class="text-lg text-gray-600 font-normal">(每題4分)</span>
+            </h2>
+            <h2 class="text-2xl font-semibold text-gray-900 mb-4 mt-12 border-b-2 border-indigo-500 pb-2">
+                第三部分: AI時代的提問技巧與圖像應用 (17題) <span class="text-lg text-gray-600 font-normal">(每題3分)</span>
+            </h2>
+            <h2 class="text-2xl font-semibold text-gray-900 mb-4 mt-12 border-b-2 border-indigo-500 pb-2">
+                第四部分: AI與工作/社會的衝擊與反思 (6題) <span class="text-lg text-gray-600 font-normal">(每題4分)</span>
+            </h2>
+            <h2 class="text-2xl font-semibold text-gray-900 mb-4 mt-12 border-b-2 border-indigo-500 pb-2">
+                第五部份: 試著撰寫提示詞 (共1題) <span class="text-lg text-gray-600 font-normal">(此題另以人工批閱，不計算於此卷)</span>
+            </h2>
+            <div class="mt-12">
+                <button type="submit" id="submitBtn" class="submit-btn" disabled>
+                    讀取中，請稍候...
+                </button>
+            </div>
+        </form>
+
+        <div id="score" class="mt-8 mb-20" style="display:none;">
+            總分: <span id="scoreValue">0 / 99</span>
+        </div>
+    </div>
+
+    <script>
+        // *** 1. 新增 ***：貼上您 Apps Script 部署的 "網頁應用程式 URL"
+        // (請務必使用重新部署後 "新" 的 URL)
+        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/在此貼上您新的URL/exec";
+
+        // --- DOM 元素 (保持不變) ---
+        const studentSelector = document.getElementById('studentSelector');
+        const quizForm = document.getElementById('quizForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const messageModal = document.getElementById('messageModal');
+        const modalMessageText = document.getElementById('modalMessageText');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        const scoreDiv = document.getElementById('score');
+        const scoreValue = document.getElementById('scoreValue');
+        
+        // --- 計時器 (保持不變) ---
+        let startTime = null;
+
+        // --- 訊息提示框功能 (保持不變) ---
+        function showMessage(message) {
+            modalMessageText.textContent = message;
+            messageModal.classList.add('show');
+        }
+        modalCloseBtn.addEventListener('click', () => {
+            messageModal.classList.remove('show');
+        });
+
+        // --- 填充學生下拉選單 (保持不變) ---
+        function populateStudentDropdown(studentList) {
+            studentSelector.innerHTML = '<option value="">-- 請選擇您的學號與姓名 --</option>';
+            if (studentList && studentList.length > 0) {
+                 studentList.forEach(student => {
+                    const option = document.createElement('option');
+                    option.value = student.id;
+                    option.textContent = `${student.id} ${student.name}`;
+                    studentSelector.appendChild(option);
+                });
+            } else {
+                 studentSelector.innerHTML = '<option value="">-- 載入學生名單失敗 --</option>';
+            }
+        }
+
+        // --- 顯示/隱藏提示 (保持不變) ---
+        document.querySelectorAll('.hint-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const hintText = button.nextElementSibling;
+                hintText.style.display = hintText.style.display === 'none' ? 'block' : 'none';
+            });
+        });
+
+        // --- 提交表單 (*** 修改：改用 fetch ***) ---
+        quizForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // 1. 檢查是否選擇了學生 (保持不變)
+            const selectedStudentId = studentSelector.value;
+            if (!selectedStudentId) {
+                showMessage("請先在最上方選擇您的學號與姓名再提交！");
+                studentSelector.focus();
+                return;
+            }
+            const selectedStudentName = studentSelector.options[studentSelector.selectedIndex].text.split(' ').slice(1).join(' '); 
+
+            // 2. 批改答案 (保持不變)
+            const correctAnswers = {
+                'q1': 'C', 'q2': 'C', 'q3': 'D', 'q4': 'C', 'q5': 'C', 'q6': 'C', 'q7': 'B',
+                'q8': 'D', 'q9': 'C', 'q10': 'C', 'q11': 'B', 'q12': 'B', 'q13': 'C', 'q14': 'D',
+                'q15': 'C', 'q16': 'C', 'q17': 'C', 'q18': 'C', 'q19': 'B', 'q20': 'C', 'q21': 'A',
+                'q22': 'B', 'q23': 'B', 'q24': 'B', 'q25': 'B', 'q26': 'C', 'q27': 'C', 'q28': 'B',
+                'q29': 'C'
+            };
+            const pointValues = {
+                'q1': 4, 'q2': 4, 'q3': 4, 'q4': 4, 'q5': 4, 'q6': 4, 
+                'q7': 3, 'q8': 3, 'q9': 3, 'q10': 3, 'q11': 3, 'q12': 3, 'q13': 3,
+                'q14': 3, 'q15': 3, 'q16': 3, 'q17': 3, 'q18': 3, 'q19': 3, 'q20': 3,
+                'q21': 3, 'q22': 3, 'q23': 3,
+                'q24': 4, 'q25': 4, 'q26': 4, 'q27': 4, 'q28': 4, 'q29': 4
+            };
+            const totalPossibleScore = 99;
+            
+            let score = 0;
+            const formData = new FormData(this);
+            const userAnswers = {};
+            for (let [key, value] of formData.entries()) { userAnswers[key] = value; }
+
+            // (批改迴圈... 保持不變)
+            for (const keyName in correctAnswers) {
+                // ... (您原有的批改、顯示答對/答錯樣式的邏輯) ...
+                if (Object.hasOwnProperty.call(correctAnswers, keyName)) {
+                    const correctAnswer = correctAnswers[keyName];
+                    const userAnswer = userAnswers[keyName];
+                    const questionContainer = document.querySelector(`input[name="${keyName}"]`).closest('.question-container');
+                    const resultDiv = questionContainer.querySelector('.result');
+                    const optionLabels = questionContainer.querySelectorAll('.option-label');
+                    let isCorrect = false;
+                    if (userAnswer === correctAnswer) {
+                        score += pointValues[keyName] || 0;
+                        isCorrect = true;
+                    }
+                    optionLabels.forEach(label => {
+                        label.style.backgroundColor = '#f9f9f9'; 
+                        label.style.borderColor = '#eee';
+                        label.classList.remove('correct-answer-text', 'incorrect-answer-text');
+                    });
+                    optionLabels.forEach(label => {
+                        const input = label.querySelector('input');
+                        if (input.value === correctAnswer) {
+                            label.classList.add('correct-answer-text');
+                            label.style.backgroundColor = '#dcfce7'; 
+                            label.style.borderColor = '#86efac';
+                        }
+                        if (input.value === userAnswer && !isCorrect) {
+                            label.classList.add('incorrect-answer-text');
+                            label.style.backgroundColor = '#fee2e2'; 
+                            label.style.borderColor = '#fca5a5';
+                        }
+                    });
+                    resultDiv.style.display = 'block';
+                    if (isCorrect) {
+                        resultDiv.innerHTML = `✓ 答對了！ (+${pointValues[keyName] || 0} 分)`;
+                        resultDiv.className = 'result correct';
+                    } else if (!userAnswer) {
+                        resultDiv.innerHTML = `✗ 未作答。正確答案是 (${correctAnswer})。`;
+                        resultDiv.className = 'result incorrect';
+                    } else {
+                        resultDiv.innerHTML = `✗ D 答錯了。正確答案是 (${correctAnswer})。`;
+                        resultDiv.className = 'result incorrect';
+                    }
+                }
+            }
+
+            // 3. 顯示總分 (保持不變)
+            scoreValue.textContent = `${score} / ${totalPossibleScore}`;
+            scoreDiv.style.display = 'block';
+            scoreDiv.scrollIntoView({ behavior: 'smooth' });
+
+            // 4. 儲存考試紀錄到 Google Sheet
+            submitBtn.disabled = true;
+            submitBtn.textContent = '儲存中...';
+
+            let durationInSeconds = 0;
+            if (startTime) {
+                const endTime = new Date();
+                durationInSeconds = Math.round((endTime - startTime) / 1000); 
+            }
+            
+            const record = {
+                studentId: selectedStudentId,
+                studentName: selectedStudentName,
+                score: score,
+                totalPossibleScore: totalPossibleScore,
+                duration: durationInSeconds,
+                answers: userAnswers
+            };
+            
+            // *** 5. 修改：將 google.script.run 改為 fetch ***
+            const payload = {
+              action: "saveRecordA", // <-- 指定 A 卷的 action
+              data: record
+            };
+
+            fetch(GAS_WEB_APP_URL, {
+              method: 'POST',
+              // mode: 'no-cors', // 測試時如果遇到 CORS 問題，可以先打開這個，但 'no-cors' 會讓你看不到回傳訊息
+              body: JSON.stringify(payload),
+              headers: {
+                'Content-Type': 'text/plain;charset=utf-8', // Apps Script 接收 POST 的標準做法
+              },
+            })
+            .then(res => res.json()) // 解析後端回傳的 JSON
+            .then(response => {
+              if (response.status === 'success') {
+                onRecordSaved(response.data); // 呼叫成功函數 (傳入 "紀錄儲存成功！")
+              } else {
+                throw new Error(response.message); // 拋出後端傳來的錯誤
+              }
+            })
+            .catch(err => onRecordSaveFailed(err)); // 呼叫失敗函數
+        });
+        
+        // --- 回呼函數 (保持不變) ---
+        function onRecordSaved(responseMessage) {
+            console.log(responseMessage);
+            showMessage("測驗已提交並成功儲存！");
+            submitBtn.disabled = false;
+            submitBtn.textContent = '送出答案';
+        }
+        
+        function onRecordSaveFailed(error) {
+            console.error(error);
+            showMessage(`儲存紀錄失敗: ${error.message}`);
+            submitBtn.disabled = false;
+            submitBtn.textContent = '送出答案 (儲存失敗)';
+        }
+
+
+        // --- D 應用程式啟動 (*** 修改：改用 fetch ***) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // 啟用提交按鈕 (保持不變)
+            submitBtn.disabled = false;
+            submitBtn.textContent = '送出答案';
+            
+            // 監聽學生選單 (保持不變)
+            studentSelector.addEventListener('change', () => {
+                if (studentSelector.value && !startTime) { 
+                    startTime = new Date();
+                    console.log('計時開始:', startTime);
+                }
+            });
+            
+            // *** 6. 修改：將 google.script.run 改為 fetch ***
+            const payload = { action: "getStudents" };
+
+            fetch(GAS_WEB_APP_URL, {
+              method: 'POST',
+              body: JSON.stringify(payload),
+              headers: {
+                'Content-Type': 'text/plain;charset=utf-8',
+              },
+            })
+            .then(res => res.json())
+            .then(response => {
+              if (response.status === 'success') {
+                populateStudentDropdown(response.data); // 呼叫成功函數 (傳入學生列表)
+              } else {
+                throw new Error(response.message); // 拋出後端傳來的錯誤
+              }
+            })
+            .catch(err => {
+                console.error('載入學生名單失敗:', err);
+                studentSelector.innerHTML = '<option value="">-- 載入學生名單失敗 --</option>';
+            });
+        });
+
+    </script>
+</body>
+</html>
